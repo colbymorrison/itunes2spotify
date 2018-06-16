@@ -9,6 +9,7 @@ __pycache__/
 
 #Spotify cache
 .cache*
+spotifyids.sh
 
 # C extensions
 *.so
