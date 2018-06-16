@@ -5,7 +5,10 @@ __pycache__/
 *$py.class
 
 # Idea
-idea/
+.idea/
+
+#Spotify cache
+.cache*
 
 # C extensions
 *.so
