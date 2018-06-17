@@ -24,7 +24,6 @@ class TransferTest(unittest.TestCase):
         self.assertTrue(changed)
         self.assertEqual(new, 'Abbey Road')
 
-
     def test_changed_None_None(self):
         self.transfer.get_itunes_album = MagicMock(return_value=None)
         album = None

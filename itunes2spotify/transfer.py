@@ -44,7 +44,8 @@ class Transfer:
     # Call to Swift function
     @staticmethod
     def get_itunes_album():
-        process = subprocess.Popen(["swift", str(Path.cwd().parent / 'utils' / 'album.swift')],
+        file_path = Path(os.path.dirname(os.path.abspath(__file__)))
+        process = subprocess.Popen(["swift", str(file_path.parent / 'utils' / 'album.swift')],
                                    stdout=subprocess.PIPE)
         return str(process.communicate()[0], 'utf-8')
 
@@ -56,8 +57,6 @@ class Transfer:
 
         album_name = items['name']
         artist_name = items['artists'][0]['name']
-
-        spfy_album = self.sp.album(album_id)
 
         print("Found {} by {}".format(album_name, artist_name))
 
@@ -73,5 +72,6 @@ class Transfer:
                     ans = input("Please enter y or n: ")
 
         print("Adding...")
-        #self.sp.current_user_saved_albums(spfy_album)
+        self.sp.current_user_saved_albums_add([album_id])
+        print("Done")
         return

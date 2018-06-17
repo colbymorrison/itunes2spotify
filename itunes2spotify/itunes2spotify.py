@@ -25,26 +25,15 @@ def its(version):
 def login(username):
     scope = 'user-library-modify'
 
-    token = get_cache(username)
-
-    # If true, there is a cache file for user
-    if token:
-        login_write(username)
-    else:
-        # token = util.prompt_for_user_token(username, scope)
-        token = util.prompt_for_user_token(username, scope=scope, client_id='5af78a01d52c4bf1b57c1d46d150a5fa',
+    token = util.prompt_for_user_token(username, scope=scope, client_id='5af78a01d52c4bf1b57c1d46d150a5fa',
                                        client_secret='6bcc348f9cda40fa8a8a46edca760c6b',
                                        redirect_uri='http://localhost/')
     if token:
-        login_write(username)
+        with open(userfile, 'w') as f:
+            f.write(token)
+        print("Successfully logged in {}".format(username))  # current_user() ?    else:
     else:
         print("Error accessing token, please try again")
-
-
-def login_write(username):
-    with open(userfile, 'w') as f:
-        f.write(username)
-    print("Successfully logged in {}".format(username))  # current_user() ?
 
 
 # Start transfer
@@ -53,8 +42,8 @@ def login_write(username):
               help='Will not ask for confirmation Spotify album is correct before adding')
 def tran(risk):
     with open(userfile, 'r') as f:
-        username = f.read()
-    token = get_cache(username)
+        token = f.read()
+    # token = get_cache(username)
 
     if not token:
         print("Unable to authenticate. Please login with the 'login' command")
