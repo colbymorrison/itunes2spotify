@@ -15,27 +15,31 @@ class Transfer:
 
     # Checks if iTunes album has changed every 5 seconds, if it has add to Spotify
     def start(self):
-        print("Ready.\nPlay album in iTunes to transfer (CTRL-C to quit)")
-        curr_album = self.get_itunes_album()
+        print("Play album in iTunes to transfer (CTRL-C to quit)")
+        album = self.get_itunes_album()
+
+        # Initial state
         changed = True
-        new_album = curr_album
         while True:
             try:
                 if changed:
-                    self.get_spotify_album(new_album)
+                    try:
+                        self.get_spotify_album(album)
+                    except IndexError:
+                        print("Index error")
                 else:
                     time.sleep(5)
-                changed, new_album = self.album_changed(curr_album)
+                changed, album = self.album_changed(album)
             except KeyboardInterrupt:
                 return 0
 
     # Given an album, it is not playing in iTunes?
     def album_changed(self, album):
         new_album = self.get_itunes_album()
-        if album != new_album:
+        if new_album and album != new_album:
             return True, new_album
         else:
-            return False, None
+            return False, album
 
     # Call to Swift function
     @staticmethod
@@ -69,5 +73,5 @@ class Transfer:
                     ans = input("Please enter y or n: ")
 
         print("Adding...")
-        #sp.current_user_saved_albums(spfy_album)
+        #self.sp.current_user_saved_albums(spfy_album)
         return
