@@ -9,43 +9,25 @@ from pathlib import Path
 
 
 class Transfer:
-    def __init__(self, username, flag):
-        self.username = username
+    def __init__(self, sp, flag):
         self.flag = flag
-        self.sp = None
-
-    # Log into Spotify
-    def spfy_go(self):
-        scope = 'user-library-modify'
-        with open('client_secret', 'r') as file:
-            client_id = file.readline()
-            client_secret = file.readline()
-    #    token = util.prompt_for_user_token(username, scope)
-        token = util.prompt_for_user_token(self.username, scope=scope, client_id=client_id,
-                                           client_secret=client_secret,
-                                           redirect_uri='http://localhost/')
-        if token:
-            self.sp = spotipy.Spotify(auth=token)
-            # TODO: How do you quit this?
-            try:
-                self.start_transfer()
-            except KeyboardInterrupt:
-                return 0
-        else:
-            print("Error: couldn't access token")
+        self.sp = sp
 
     # Checks if iTunes album has changed every 5 seconds, if it has add to Spotify
-    def start_transfer(self):
+    def start(self):
         print("Ready.\nPlay album in iTunes to transfer (CTRL-C to quit)")
         curr_album = self.get_itunes_album()
         changed = True
         new_album = curr_album
         while True:
-            if changed:
-                self.get_spotify_album(new_album)
-            else:
-                time.sleep(5)
-            changed, new_album = self.album_changed(curr_album)
+            try:
+                if changed:
+                    self.get_spotify_album(new_album)
+                else:
+                    time.sleep(5)
+                changed, new_album = self.album_changed(curr_album)
+            except KeyboardInterrupt:
+                return 0
 
     # Given an album, it is not playing in iTunes?
     def album_changed(self, album):
@@ -56,9 +38,9 @@ class Transfer:
             return False, None
 
     # Call to Swift function
-    def get_itunes_album(self):
-        ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
-        process = subprocess.Popen(["swift", str(ROOT_DIR.parent / 'utils' / 'album.swift')],
+    @staticmethod
+    def get_itunes_album():
+        process = subprocess.Popen(["swift", str(Path.cwd().parent / 'utils' / 'album.swift')],
                                    stdout=subprocess.PIPE)
         return str(process.communicate()[0], 'utf-8')
 
@@ -74,7 +56,6 @@ class Transfer:
         spfy_album = self.sp.album(album_id)
 
         print("Found {} by {}".format(album_name, artist_name))
-        flag = True
 
         # If -r mode is not set, check if correct album was found
         if self.flag:
