@@ -1,0 +1,4 @@
+include README.rst
+include res/album.swift
+include res/token
+exclude .gitignore

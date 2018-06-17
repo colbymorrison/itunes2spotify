@@ -1,14 +1,14 @@
 import spotipy
 import click
+import os
 from transfer import Transfer
 from spotipy import util
-import pathlib
-import os
+from spotipy.client import SpotifyException
 from pathlib import Path
-import json
+
 
 file_path = Path(os.path.dirname(os.path.abspath(__file__)))
-userfile = file_path / 'loggedin'
+userfile = file_path.parent / 'res' / 'token'
 
 
 # Startup
@@ -20,18 +20,23 @@ def its(version):
 
 
 # Log into Spotify
-@its.command(help='Login to the service, enter your username')
+@its.command(help='Login to the service, enter your Spotify username')
 @click.argument('username')
 def login(username):
     scope = 'user-library-modify'
 
-    token = util.prompt_for_user_token(username, scope=scope, client_id='5af78a01d52c4bf1b57c1d46d150a5fa',
-                                       client_secret='6bcc348f9cda40fa8a8a46edca760c6b',
+    with open(file_path.parent/'res'/'client_secret','r') as f:
+        client_id = f.readline().rstrip()
+        client_secret = f.readline().rstrip()
+
+
+    token = util.prompt_for_user_token(username, scope=scope, client_id=client_id,
+                                       client_secret=client_secret,
                                        redirect_uri='http://localhost/')
     if token:
         with open(userfile, 'w') as f:
             f.write(token)
-        print("Successfully logged in {}".format(username))  # current_user() ?    else:
+        print("Successfully logged in {}".format(username))
     else:
         print("Error accessing token, please try again")
 
@@ -43,13 +48,16 @@ def login(username):
 def tran(risk):
     with open(userfile, 'r') as f:
         token = f.read()
-    # token = get_cache(username)
 
     if not token:
         print("Unable to authenticate. Please login with the 'login' command")
         return
     else:
-        sp = spotipy.Spotify(auth=token)
+        try:
+            sp = spotipy.Spotify(auth=token)
+        except SpotifyException:
+            print("Sorry there was an error, please try log in again and retry")
+            return
 
     if risk:
         transfer = Transfer(sp, False)
@@ -59,22 +67,9 @@ def tran(risk):
     transfer.start()
 
 
-def get_cache(username):
-    path = file_path / '.cache-{}'.format(username)
-    if path.is_file():
-        with open(path, 'r') as f:
-            line = json.loads(f.read())
-            return line['access_token']
-    else:
-        return None
-
-
-def logout():
-    with open(userfile, 'rw') as f:
-        name = f.read()
-        f.write("")
-        print("Logged out {}".format(name))
+def main():
+    its()
 
 
 if __name__ == "__main__":
-    its()
+    main()

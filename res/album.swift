@@ -8,6 +8,7 @@ import ScriptingBridge
 
 @objc protocol iTunesApplication{
     @objc optional var currentTrack: iTunesTrack? {get}
+    @objc optional var albums: 
 }
 
 extension SBApplication : iTunesApplication {}

@@ -45,7 +45,7 @@ class Transfer:
     @staticmethod
     def get_itunes_album():
         file_path = Path(os.path.dirname(os.path.abspath(__file__)))
-        process = subprocess.Popen(["swift", str(file_path.parent / 'utils' / 'album.swift')],
+        process = subprocess.Popen(["swift", str(file_path.parent / 'res' / 'album.swift')],
                                    stdout=subprocess.PIPE)
         return str(process.communicate()[0], 'utf-8')
 
@@ -71,7 +71,7 @@ class Transfer:
                 else:
                     ans = input("Please enter y or n: ")
 
-        print("Adding...")
+        print("Adding {} by {}".format(album_name, artist_name))
         self.sp.current_user_saved_albums_add([album_id])
         print("Done")
         return

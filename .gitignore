@@ -9,7 +9,8 @@ __pycache__/
 
 #Spotify cache
 .cache*
-itunes2spotify/client_secret
+res/client_secret
+res/token
 
 # C extensions
 *.so
