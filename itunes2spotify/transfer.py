@@ -58,11 +58,10 @@ class Transfer:
         album_name = items['name']
         artist_name = items['artists'][0]['name']
 
-        print("Found {} by {}".format(album_name, artist_name))
-
         # If -r mode is not set, check if correct album was found
         if self.flag:
             while True:
+                print("Found {} by {}".format(album_name, artist_name))
                 ans = input("Correct? (y/n): ")
                 if ans == 'y':
                     break
@@ -71,7 +70,6 @@ class Transfer:
                 else:
                     ans = input("Please enter y or n: ")
 
-        print("Adding {} by {}".format(album_name, artist_name))
+        print("Adding {} by {} \n".format(album_name, artist_name))
         self.sp.current_user_saved_albums_add([album_id])
-        print("Done")
         return

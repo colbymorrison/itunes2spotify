@@ -1,7 +1,7 @@
 import spotipy
 import click
 import os
-from transfer import Transfer
+from itunes2spotify.transfer import Transfer
 from spotipy import util
 from spotipy.client import SpotifyException
 from pathlib import Path
@@ -28,7 +28,6 @@ def login(username):
     with open(file_path.parent/'res'/'client_secret','r') as f:
         client_id = f.readline().rstrip()
         client_secret = f.readline().rstrip()
-
 
     token = util.prompt_for_user_token(username, scope=scope, client_id=client_id,
                                        client_secret=client_secret,
