@@ -2,13 +2,14 @@ import spotipy
 import click
 import os
 from itunes2spotify.transfer import Transfer
+# from transfer import Transfer
 from spotipy import util
 from spotipy.client import SpotifyException
 from pathlib import Path
 
 
 file_path = Path(os.path.dirname(os.path.abspath(__file__)))
-userfile = file_path.parent / 'res' / 'token'
+userfile = file_path.parent / 'resources' / 'token'
 
 
 # Startup
@@ -20,12 +21,12 @@ def its(version):
 
 
 # Log into Spotify
-@its.command(help='Login to the service, enter your Spotify username')
+@its.command(help='Login to Spotify with your username')
 @click.argument('username')
 def login(username):
     scope = 'user-library-modify'
 
-    with open(file_path.parent/'res'/'client_secret','r') as f:
+    with open(file_path.parent/'resources'/'client_secret', 'r') as f:
         client_id = f.readline().rstrip()
         client_secret = f.readline().rstrip()
 

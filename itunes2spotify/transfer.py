@@ -28,7 +28,7 @@ class Transfer:
                     except IndexError:
                         print("Index error")
                 else:
-                    time.sleep(5)
+                    time.sleep(1)
                 changed, album = self.album_changed(album)
             except KeyboardInterrupt:
                 return 0
@@ -45,7 +45,7 @@ class Transfer:
     @staticmethod
     def get_itunes_album():
         file_path = Path(os.path.dirname(os.path.abspath(__file__)))
-        process = subprocess.Popen(["swift", str(file_path.parent / 'res' / 'album.swift')],
+        process = subprocess.Popen(["swift", str(file_path.parent / 'resources' / 'album.swift')],
                                    stdout=subprocess.PIPE)
         return str(process.communicate()[0], 'utf-8')
 
@@ -61,11 +61,14 @@ class Transfer:
         # If -r mode is not set, check if correct album was found
         if self.flag:
             while True:
-                print("Found {} by {}".format(album_name, artist_name))
+                album_artist = "{} by {}".format(album_name, artist_name) 
+                print("Found {}".format(album_artist))
                 ans = input("Correct? (y/n): ")
                 if ans == 'y':
                     break
                 elif ans == 'n':
+                    with open('wrong_guesses','a+') as f:
+                        f.write(album_artist)
                     return
                 else:
                     ans = input("Please enter y or n: ")

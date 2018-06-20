@@ -9,8 +9,12 @@ __pycache__/
 
 #Spotify cache
 .cache*
+
+#Project files
 res/client_secret
 res/token
+res/wrong_guesses
+logs.txt
 
 # C extensions
 *.so
