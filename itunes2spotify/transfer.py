@@ -72,23 +72,26 @@ class Transfer:
         album_name = items['name']
         artist_name = items['artists'][0]['name']
 
+        print("Found {} by {}".format(album_name, artist_name))
+
         # If -r mode is not set, check if correct album was found
         if self.flag:
             while True:
-                album_artist = "{} by {}".format(album_name, artist_name) 
-                print("Found {}".format(album_artist))
                 ans = input("Correct? (y/n): ")
                 if ans == 'y':
+                    print("Adding {} by {} \n".format(album_name, artist_name))
                     break
                 elif ans == 'n':
-                    with open('wrong_guesses', 'a+') as f:
-                        f.write(album_artist)
-                    self.search_artist()
-                    return
+                    album_name, album_id = self.search_artist()
+                    if album_name is None:
+                        print("Spotify has no albums by {} with the name {}".format(artist_name,
+                                                                                    self.curr_album_artist[0]))
+                        break
+                    else:
+                        print("Found {} by {}".format(self.curr_album_artist[0], artist_name))
                 else:
-                    ans = input("Please enter y or n: ")
+                    print("Please enter y or n")
 
-        print("Adding {} by {} \n".format(album_name, artist_name))
         self.sp.current_user_saved_albums_add([album_id])
         return
 
@@ -99,18 +102,17 @@ class Transfer:
         results = self.sp.search(q=artist, type='artist')
 
         id = results['artists']['items'][0]['id']
-        albums = self.sp.artist_albums(id, limit=20)
+        albums = self.sp.artist_albums(id, limit=50)
         items = albums['items']
 
         for album in items:
-            if album['name'] == self.curr_album_artist[0]:
-                print("who")
+            name = album['name']
+            logging.debug("Found album {}".format(name))
+            if name == self.curr_album_artist[0]:
+                return name, album['id']
+        return None, False
 
 
-        items0 = albums['items'][0]
-        items1 = albums['items'][1]
-        logging.debug("ITEMS0: {}".format(items0))
-        logging.debug("ITEMS0: {}".format(items1))
 
 
 
