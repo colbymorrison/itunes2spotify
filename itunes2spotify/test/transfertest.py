@@ -8,34 +8,36 @@ class TransferTest(unittest.TestCase):
     def setUp(self):
         sp = MagicMock(spotipy.Spotify())
         self.transfer = Transfer(sp, True)
-        self.transfer.get_itunes_album = MagicMock(return_value='Abbey Road')
+
+        self.abbey_road = ['Abbey Road', 'The Beatles']
+        self.transfer.get_itunes_album = MagicMock(return_value=self.abbey_road)
+        self.transfer.curr_album_artist = None
 
     def test_changed_None_Some(self):
-        album = None
-
-        changed, new = self.transfer.album_changed(album)
+        changed = self.transfer.album_changed()
         self.assertTrue(changed)
-        self.assertEqual(new, 'Abbey Road')
+        self.assertEqual(self.transfer.curr_album_artist, self.abbey_road)
 
     def test_changed_Some_Some(self):
-        album = 'Revolver'
+        self.transfer.curr_album_artist = ['Revolver', 'The Beatles']
 
-        changed, new = self.transfer.album_changed(album)
+        changed = self.transfer.album_changed()
         self.assertTrue(changed)
-        self.assertEqual(new, 'Abbey Road')
+        self.assertEqual(self.transfer.curr_album_artist, self.abbey_road)
 
     def test_changed_None_None(self):
-        self.transfer.get_itunes_album = MagicMock(return_value=None)
-        album = None
+        self.transfer.album_changed = MagicMock(return_value=None)
 
-        changed, new = self.transfer.album_changed(album)
+        changed = self.transfer.album_changed()
         self.assertFalse(changed)
 
     def test_changed_Some_None(self):
-        self.transfer.get_itunes_album = MagicMock(return_value=None)
-        album = 'Abbey Road'
+        self.transfer.album_changed = MagicMock(return_value=None)
+        self.transfer.curr_album_artist = self.abbey_road
 
-        changed, new = self.transfer.album_changed(album)
+        changed = self.transfer.album_changed()
         self.assertFalse(changed)
+
+
 
 
