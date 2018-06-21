@@ -1,15 +1,18 @@
 import spotipy
 import click
 import os
-from itunes2spotify.transfer import Transfer
-# from transfer import Transfer
+import sys
+#from itunes2spotify.transfer import Transfer
+from transfer import Transfer
 from spotipy import util
 from spotipy.client import SpotifyException
 from pathlib import Path
-
+import logging
 
 file_path = Path(os.path.dirname(os.path.abspath(__file__)))
-userfile = file_path.parent / 'resources' / 'token'
+resource_path = file_path / 'resources'
+logs_path = file_path.parent / 'logs.log'
+token_path = resource_path / 'token'
 
 
 # Startup
@@ -26,7 +29,7 @@ def its(version):
 def login(username):
     scope = 'user-library-modify'
 
-    with open(file_path.parent/'resources'/'client_secret', 'r') as f:
+    with open(resource_path / 'client_secret', 'r') as f:
         client_id = f.readline().rstrip()
         client_secret = f.readline().rstrip()
 
@@ -34,40 +37,50 @@ def login(username):
                                        client_secret=client_secret,
                                        redirect_uri='http://localhost/')
     if token:
-        with open(userfile, 'w') as f:
+        with open(token_path, 'w') as f:
             f.write(token)
-        print("Successfully logged in {}".format(username))
+        success = "Successfully logged in {}".format(username)
+        logger.info(success)
+        print(success)
     else:
-        print("Error accessing token, please try again")
+        logger.error("Login error")
+        print("Login error, Please try again")
 
 
 # Start transfer
 @its.command(help='Initiate transfer')
 @click.option('--risk', '-r', is_flag=True,
               help='Will not ask for confirmation Spotify album is correct before adding')
-def tran(risk):
-    with open(userfile, 'r') as f:
+def transfer(risk):
+    with open(token_path, 'r') as f:
         token = f.read()
 
     if not token:
+        logger.error("Unable to authenticate")
         print("Unable to authenticate. Please login with the 'login' command")
         return
     else:
         try:
             sp = spotipy.Spotify(auth=token)
         except SpotifyException:
-            print("Sorry there was an error, please try log in again and retry")
+            logger.error("Soptify error")
+            print("Soptify error. Please try log in again and retry")
             return
 
     if risk:
-        transfer = Transfer(sp, False)
+        tran = Transfer(sp, False)
     else:
-        transfer = Transfer(sp, True)
+        tran = Transfer(sp, True)
 
-    transfer.start()
+    logger.debug("Starting transfer")
+    tran.start()
 
 
 def main():
+    global logger
+    logging.basicConfig(file=logs_path, level=logging.DEBUG)
+    logger = logging.getLogger()
+    logger.debug("Start")
     its()
 
 

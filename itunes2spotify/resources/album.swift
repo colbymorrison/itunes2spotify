@@ -17,4 +17,3 @@ let app: iTunesApplication = SBApplication(bundleIdentifier: "com.apple.iTunes")
 let currentTrack: iTunesTrack? = app.currentTrack!
 let album = currentTrack?.album!
 print("\(album!)")
-

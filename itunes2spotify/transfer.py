@@ -3,7 +3,9 @@ import spotipy.util as util
 import os
 import subprocess
 import time
+import logging
 from pathlib import Path
+
 
 # Transfer iTunes album that is playing to Spotify library
 
@@ -12,10 +14,12 @@ class Transfer:
     def __init__(self, sp, flag):
         self.flag = flag
         self.sp = sp
+        self.logger = logging.getLogger(__name__)
 
     # Checks if iTunes album has changed every 5 seconds, if it has add to Spotify
     def start(self):
         print("Play album in iTunes to transfer (CTRL-C to quit)")
+        logging.info("Entry msg")
         album = self.get_itunes_album()
 
         # Initial state
@@ -45,7 +49,7 @@ class Transfer:
     @staticmethod
     def get_itunes_album():
         file_path = Path(os.path.dirname(os.path.abspath(__file__)))
-        process = subprocess.Popen(["swift", str(file_path.parent / 'resources' / 'album.swift')],
+        process = subprocess.Popen(["swift", str(file_path / 'resources' / 'album.swift')],
                                    stdout=subprocess.PIPE)
         return str(process.communicate()[0], 'utf-8')
 
@@ -69,6 +73,7 @@ class Transfer:
                 elif ans == 'n':
                     with open('wrong_guesses','a+') as f:
                         f.write(album_artist)
+                    search_artist()
                     return
                 else:
                     ans = input("Please enter y or n: ")
@@ -76,3 +81,6 @@ class Transfer:
         print("Adding {} by {} \n".format(album_name, artist_name))
         self.sp.current_user_saved_albums_add([album_id])
         return
+
+    def search_artist(self):
+
