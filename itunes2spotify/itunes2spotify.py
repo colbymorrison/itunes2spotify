@@ -78,7 +78,8 @@ def transfer(risk):
 
 def main():
     global logger
-    logging.basicConfig(file=logs_path, level=logging.DEBUG)
+    log_form = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(filename=logs_path, format=log_form, level=logging.DEBUG)
     logger = logging.getLogger()
     logger.debug("Start")
     its()

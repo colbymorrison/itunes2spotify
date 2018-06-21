@@ -2,7 +2,7 @@
 import ScriptingBridge
 
 @objc protocol iTunesTrack {
-    @objc optional var albumArtist: String{get}
+    @objc optional var artist: String{get}
     @objc optional var album: String {get}
 }
 
@@ -16,4 +16,5 @@ let app: iTunesApplication = SBApplication(bundleIdentifier: "com.apple.iTunes")
 
 let currentTrack: iTunesTrack? = app.currentTrack!
 let album = currentTrack?.album!
-print("\(album!)")
+let artist = currentTrack?.artist!
+print("\(album!)<\(artist!)")

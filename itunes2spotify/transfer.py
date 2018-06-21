@@ -1,4 +1,4 @@
-import spotipy
+from spotipy import SpotifyException
 import spotipy.util as util
 import os
 import subprocess
@@ -9,18 +9,28 @@ from pathlib import Path
 
 # Transfer iTunes album that is playing to Spotify library
 
+file_path = Path(os.path.dirname(os.path.abspath(__file__)))
+logs_path = file_path.parent / 'logs.log'
+
 
 class Transfer:
+
     def __init__(self, sp, flag):
         self.flag = flag
         self.sp = sp
+
+        log_form = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        logging.basicConfig(file=logs_path, format=log_form, level=logging.DEBUG)
+        logger = logging.getLogger()
+        logger.debug("Start")
         self.logger = logging.getLogger(__name__)
 
     # Checks if iTunes album has changed every 5 seconds, if it has add to Spotify
     def start(self):
         print("Play album in iTunes to transfer (CTRL-C to quit)")
         logging.info("Entry msg")
-        album = self.get_itunes_album()
+        album_artist = self.get_itunes_album()
+        logging.debug("Album artist {}".format(album_artist))
 
         # Initial state
         changed = True
@@ -28,12 +38,15 @@ class Transfer:
             try:
                 if changed:
                     try:
-                        self.get_spotify_album(album)
+                        self.get_spotify_album(album_artist[0])
                     except IndexError:
-                        print("Index error")
+                        print("Couldn't find an album with this title in Spotify")
+                    except SpotifyException:
+                        self.logger.error("Soptify error")
+                        print("Soptify error. Please try log in again and retry")
                 else:
                     time.sleep(1)
-                changed, album = self.album_changed(album)
+                changed, album_artist = self.album_changed(album_artist)
             except KeyboardInterrupt:
                 return 0
 
@@ -48,10 +61,9 @@ class Transfer:
     # Call to Swift function
     @staticmethod
     def get_itunes_album():
-        file_path = Path(os.path.dirname(os.path.abspath(__file__)))
         process = subprocess.Popen(["swift", str(file_path / 'resources' / 'album.swift')],
                                    stdout=subprocess.PIPE)
-        return str(process.communicate()[0], 'utf-8')
+        return str(process.communicate()[0], 'utf-8').split('<')
 
     # Search for album string in Spotify and add to library
     def get_spotify_album(self, it_album_str):
@@ -71,9 +83,9 @@ class Transfer:
                 if ans == 'y':
                     break
                 elif ans == 'n':
-                    with open('wrong_guesses','a+') as f:
+                    with open('wrong_guesses', 'a+') as f:
                         f.write(album_artist)
-                    search_artist()
+                    self.search_artist()
                     return
                 else:
                     ans = input("Please enter y or n: ")
@@ -83,4 +95,15 @@ class Transfer:
         return
 
     def search_artist(self):
+        artist = self.get_itunes_album()[1]
+        logging.debug("Artist: {}".format(artist))
+        results = self.sp.search(q=artist, type='artist')
+
+        id = results['artists']['items'][0]['id']
+        albums = self.sp.artist_albums(id, limit=20)
+        logging.debug(albums)
+
+
+
+
 
