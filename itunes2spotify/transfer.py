@@ -27,31 +27,34 @@ class Transfer:
         logger.debug("Start")
         self.logger = logging.getLogger(__name__)
 
-    # Checks if iTunes album has changed every 5 seconds, if it has add to Spotify
     def start(self):
         while True:
             try:
-                if self.album_changed():
-                    logging.debug("Album artist {}".format(self.curr_album_artist[1]))
-                    try:
-                        self.get_spotify_album(self.curr_album_artist[0])
-                        print("Play album in iTunes to transfer (CTRL-C to quit)")
-                    except IndexError:
-                        print("Couldn't find an album with this title in Spotify")
-                    except SpotifyException:
-                        self.logger.error("Soptify error")
-                        print("Soptify error. Please try log in again and retry")
-                else:
-                    time.sleep(1)
+                self.run_transfer()
             except KeyboardInterrupt:
                 return 0
 
+    # Checks if iTunes album has changed every 2 seconds, if it has add to Spotify
+    def run_transfer(self):
+        if self.album_changed():
+            self.logger.debug("New iTunes album artist: {}".format(self.curr_album_artist[1]))
+            try:
+                print("Play album in iTunes to transfer (CTRL-C to quit)")
+                self.get_spotify_album(self.curr_album_artist[0])
+            except IndexError:
+                print("Couldn't find an album with this title in Spotify")
+            except SpotifyException:
+                self.logger.error("Soptify error")
+                print("Soptify error. Please try log in again and retry")
+        else:
+            time.sleep(2)
+
+    # Runs swift script to get current album and artist from iTunes
     @staticmethod
     def get_itunes_album():
         process = subprocess.Popen(["swift", str(file_path / 'resources' / 'album.swift')],
                                    stdout=subprocess.PIPE)
         return str(process.communicate()[0], 'utf-8').split('<')
-
 
     def album_changed(self):
         album_artist = self.get_itunes_album()
@@ -62,15 +65,23 @@ class Transfer:
         else:
             return False
 
-
-    # Search for album string in Spotify and add to library
+    # Search for album in Spotify and add to library
     def get_spotify_album(self, it_album_str):
+        # Search for album
         results = self.sp.search(q="album:" + it_album_str, type='album')
         items = results['albums']['items'][0]
-        album_id = items['uri']
 
+        album_id = items['uri']
         album_name = items['name']
         artist_name = items['artists'][0]['name']
+
+        # Is found album's artist same as iTunes artist?
+        if artist_name.strip() != self.curr_album_artist[1].strip():
+            self.logger.debug("Artist name {}, itunes artist {}".format(artist_name, self.curr_album_artist[1]))
+            try:
+                album_name, album_id = self.search_artist()
+            except TypeError:
+                return
 
         print("Found {} by {}".format(album_name, artist_name))
 
@@ -79,38 +90,37 @@ class Transfer:
             while True:
                 ans = input("Correct? (y/n): ")
                 if ans == 'y':
-                    print("Adding {} by {} \n".format(album_name, artist_name))
                     break
                 elif ans == 'n':
-                    album_name, album_id = self.search_artist()
-                    if album_name is None:
-                        print("Spotify has no albums by {} with the name {}".format(artist_name,
-                                                                                    self.curr_album_artist[0]))
-                        break
-                    else:
-                        print("Found {} by {}".format(self.curr_album_artist[0], artist_name))
+                    print("Sorry!")
+                    return
                 else:
                     print("Please enter y or n")
 
+        print("Adding {} by {} \n".format(album_name, artist_name))
         self.sp.current_user_saved_albums_add([album_id])
         return
 
+    # Search through an artist's albums on spotify until one matches iTunes album name
     def search_artist(self):
         artist = self.curr_album_artist[1]
 
-        logging.debug("Artist: {}".format(artist))
+        self.logger.debug("Artist: {}".format(artist))
         results = self.sp.search(q=artist, type='artist')
 
-        id = results['artists']['items'][0]['id']
-        albums = self.sp.artist_albums(id, limit=50)
-        items = albums['items']
+        album_id = results['artists']['items'][0]['id']
+        albums = self.sp.artist_albums(album_id, limit=50)
+        album_items = albums['items']
 
-        for album in items:
-            name = album['name']
-            logging.debug("Found album {}".format(name))
-            if name == self.curr_album_artist[0]:
-                return name, album['id']
-        return None, False
+        for album in album_items:
+            new_album = album['name']
+            if new_album == self.curr_album_artist[0]:
+                return new_album, album['id']
+            
+        print("Spotify has no albums with the name {} by {}".format(self.curr_album_artist[0],
+                                                                    self.curr_album_artist[1]))
+        # TODO: Custom error for no albums?
+        return None
 
 
 

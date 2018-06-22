@@ -11,10 +11,9 @@ __pycache__/
 .cache*
 
 #Project files
-res/client_secret
-res/token
-res/wrong_guesses
-logs.txt
+itunes2spotify/resources/client_secret
+itunes2spotify/resources/token
+logs.log
 
 # C extensions
 *.so
