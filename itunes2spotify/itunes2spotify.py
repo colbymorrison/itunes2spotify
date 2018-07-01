@@ -1,7 +1,6 @@
 import spotipy
 import click
 import os
-import sys
 #from itunes2spotify.transfer import Transfer
 from transfer import Transfer
 from spotipy import util
@@ -25,7 +24,7 @@ def its(version):
 
 # Log into Spotify
 @its.command(help='Login to Spotify with your username')
-@click.argument('username')
+@click.option('--username', '-u', prompt=True)
 def login(username):
     scope = 'user-library-modify'
 
