@@ -1,10 +1,8 @@
 from spotipy import SpotifyException
-import spotipy.util as util
 import os
 import subprocess
 import time
 import logging
-import json
 from datetime import datetime
 from datetime import timedelta
 from menu import Menu
@@ -51,7 +49,7 @@ class Transfer:
                 else:
                     time.sleep(2)
             except KeyboardInterrupt:
-                print("Goodbye!")
+                print("\nGoodbye!")
                 return 0
 
     # Runs swift script to get current album and artist from iTunes
@@ -66,8 +64,8 @@ class Transfer:
         album_artist = self.get_itunes_album()
 
         if album_artist and album_artist != self.get_album_artist():
-            self.itunes_album = album_artist[0]
-            self.itunes_artist = album_artist[1]
+            self.itunes_album = album_artist[0].strip()
+            self.itunes_artist = album_artist[1].strip()
             return True
         else:
             return False
@@ -101,9 +99,7 @@ class Transfer:
             self.confirm_and_add(album_name, albums_dict[album_name])
         else:
             menu = Menu()
-            menu.set_title("Found the following matching albums by {}.\
-                           Select an album to add to Spotify or None to exit"
-                           .format(self.itunes_artist))
+            menu.set_title("Found the following matching albums. Select an album to add to Spotify or None to exit")
             options = []
             for item in albums_dict.items():
                 album_name = item[0]
@@ -154,6 +150,7 @@ class Transfer:
                     self.add_spotify_album(album_name, alb_id)
                     return True
                 elif ans == 'n':
+                    print()
                     return False
                 else:
                     ans = input("Please enter y or n")
