@@ -24,7 +24,9 @@ class Transfer:
         # Connection to Spotify, Spotify client object
         self.sp = sp
         # Connection to iTunes
-        self.curr_album_artist = None
+        # self.curr_album_artist = None
+        self.itunes_album = None
+        self.itunes_artist = None
 
         # Set up logger
         log_form = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -38,10 +40,9 @@ class Transfer:
         while True:
             try:
                 if self.album_changed():
-                    self.logger.debug("New iTunes album artist: {}".format(self.curr_album_artist[1]))
                     try:
                         print("Play album in iTunes to transfer (CTRL-C to quit)")
-                        self.get_spotify_matches(self.curr_album_artist[0])
+                        self.get_spotify_matches(self.itunes_album)
                     except IndexError:
                         print("Couldn't find an album with this title in Spotify")
                     except SpotifyException:
@@ -62,21 +63,22 @@ class Transfer:
     def album_changed(self):
         album_artist = self.get_itunes_album()
 
-        if album_artist and album_artist != self.curr_album_artist:
-            self.curr_album_artist = album_artist
+        if album_artist and album_artist != self.get_album_artist():
+            self.itunes_album = album_artist[0]
+            self.itunes_artist = album_artist[1]
             return True
         else:
             return False
 
     # Search for album in Spotify and add to library
     def get_spotify_matches(self, it_album_str):
-        itunes_album = self.curr_album_artist[0]
-        itunes_artist = self.curr_album_artist[1]
+        itunes_album = self.itunes_album
+        itunes_artist = self.itunes_artist
 
-        # First search for album directly on Spotify, on avg. takes about
+        # Search for albums with matching names on Spotify
         start = datetime.now()
-        results = self.sp.search(q="album:" + it_album_str, type='album')
-        items = results['albums']['items'][0]
+        results = self.sp.search(q="album:" + it_album_str, limit='10', type='album')
+        items = results['albums']['items']
 
         artist_name = items['artists'][0]['name'].strip()
         album_name = items['name']
@@ -85,18 +87,18 @@ class Transfer:
         if artist_name == itunes_artist and album_name == itunes_album:
             album_matches = {album_name: items['uri']}
         else:
-            album_matches = self.search_artist()
+            album_matches = self.deep_search()
 
         if len(album_matches) == 0:
-            print("Spotify has no albums containing the name \"{}\" by \"{}\"".format(self.curr_album_artist[0],
-                                                                                      self.curr_album_artist[1]))
+            print("Spotify has no albums containing the name \"{}\" by \"{}\"".format(self.itunes_album,
+                                                                                      self.itunes_artist))
         else:
             self.get_spotify_album(album_matches)
 
     def get_spotify_album(self, albums_dict):
         if len(albums_dict) == 1:
             album_name = list(albums_dict.keys())[0]
-            print("Found {} by {}".format(album_name, self.curr_album_artist[1]))
+            print("Found {} by {}".format(album_name, self.itunes_artist))
             # If -r mode is not set, check if correct album was found
             if self.flag:
                 while True:
@@ -113,7 +115,7 @@ class Transfer:
             menu = Menu()
             menu.set_title("Found the following matching albums by {}.\
                            Select an album to add to Spotify or None to exit"
-                           .format(self.curr_album_artist[1]))
+                           .format(self.itunes_artist))
             options = []
             for item in albums_dict.items():
                 options.append((item[0], lambda name=item[0], album_id=item[1]: self.add_spotify_album(name, album_id)))
@@ -123,29 +125,31 @@ class Transfer:
             menu.open()
 
     def add_spotify_album(self, album_name, album_id):
-        print("Adding {} by {} \n".format(album_name, self.curr_album_artist[1]))
+        print("Adding {} by {} \n".format(album_name, self.itunes_artist))
         # self.sp.current_user_saved_albums_add([album_id])
         return
 
     # Search through an artist's albums on spotify until one matches iTunes album name
-    def search_artist(self):
+    def deep_search(self):
         album_match = {}
-        itunes_album = self.curr_album_artist[0]
-        artist = self.curr_album_artist[1]
 
-        self.logger.debug("Artist: {}".format(artist))
-        results = self.sp.search(q=artist, type='artist')
+        self.logger.debug("Artist: {}".format(self.itunes_artist))
+        results = self.sp.search(q=self.itunes_artist, type='artist')
 
-        album_id = results['artists']['items'][0]['id']
-        albums = self.sp.artist_albums(album_id, limit=50)
+        artist_id = results['artists']['items'][0]['id']
+        albums = self.sp.artist_albums(artist_id, limit=50)
         album_items = albums['items']
 
         for album in album_items:
             new_album = album['name']
-            if new_album == itunes_album:
+            if new_album == self.itunes_album:
                 album_match = {new_album: album['id']}
                 break
-            elif itunes_album in new_album:
+            elif self.itunes_album in new_album:
                 album_match[new_album] = album['id']
 
         return album_match
+
+    # Useful for testing
+    def get_album_artist(self):
+        return [self.itunes_album, self.itunes_artist]

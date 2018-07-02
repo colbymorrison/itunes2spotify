@@ -39,7 +39,6 @@ def login(username):
         with open(token_path, 'w') as f:
             f.write(token)
         success = "Successfully logged in {}".format(username)
-        logger.info(success)
         print(success)
     else:
         logger.error("Login error")
@@ -48,9 +47,9 @@ def login(username):
 
 # Start transfer
 @its.command(help='Initiate transfer')
-@click.option('--risk', '-r', is_flag=True,
+@click.option('--non-interactive', '-r', is_flag=True,
               help='Will not ask for confirmation Spotify album is correct before adding')
-def transfer(risk):
+def transfer(noninteractive):
     with open(token_path, 'r') as f:
         token = f.read()
 
@@ -66,7 +65,7 @@ def transfer(risk):
             print("Soptify error. Please try log in again and retry")
             return
 
-    if risk:
+    if noninteractive:
         tran = Transfer(sp, False)
     else:
         tran = Transfer(sp, True)

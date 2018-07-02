@@ -16,14 +16,14 @@ class TransferTest(unittest.TestCase):
     def test_changed_None_Some(self):
         changed = self.transfer.album_changed()
         self.assertTrue(changed)
-        self.assertEqual(self.transfer.curr_album_artist, self.abbey_road)
+        self.assertEqual(self.transfer.get_album_artist(), self.abbey_road)
 
     def test_changed_Some_Some(self):
         self.transfer.curr_album_artist = ['Revolver', 'The Beatles']
 
         changed = self.transfer.album_changed()
         self.assertTrue(changed)
-        self.assertEqual(self.transfer.curr_album_artist, self.abbey_road)
+        self.assertEqual(self.transfer.get_album_artist(), self.abbey_road)
 
     def test_changed_None_None(self):
         self.transfer.album_changed = MagicMock(return_value=None)
