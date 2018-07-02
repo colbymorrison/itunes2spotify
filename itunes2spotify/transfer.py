@@ -74,11 +74,11 @@ class Transfer:
     def get_spotify_matches(self):
         # Search for albums with matching names on Spotify
         start = datetime.now()
-        results = self.sp.search(q="album:" + self.itunes_album, limit='10', type='album')
+        results = self.sp.search(q="album:" + self.itunes_album, limit='20', type='album')
         items = results['albums']['items']
 
         artist_name = items[0]['artists'][0]['name'].strip()
-        album_name = items[0]['name']
+        album_name = items[0]['name'].strip()
 
         logging.debug("TIMING: dsearch {}".format((start - datetime.now()) / timedelta(milliseconds=1)))
         # If first album is a direct match (happens often), confirm and add
@@ -113,14 +113,14 @@ class Transfer:
             menu.open()
 
     # Search through an artist's albums on spotify until one matches iTunes album name
-    def deep_search(self, items):
+    def deep_search(self, album_name_items):
         album_match = {}
         results = self.sp.search(q=self.itunes_artist, type='artist')
-
         artist_id = results['artists']['items'][0]['id']
-        album_items = self.sp.artist_albums(artist_id, limit=50)['items']
+        artist_items = self.sp.artist_albums(artist_id, limit=50)['items']
+        self.logger.debug("ARTIST ITEMS: {}".format(artist_items))
 
-        for album_obj in album_items:
+        for album_obj in artist_items:
             album_name = album_obj['name']
             # If direct match is found, confirm and add
             if album_name == self.itunes_album:
@@ -128,7 +128,7 @@ class Transfer:
                 return
             elif self.itunes_album in album_name:
                 album_match[album_name] = [self.itunes_artist, album_obj['id']]
-        for album_obj in items:
+        for album_obj in album_name_items:
             artist = album_obj['artists'][0]['name']
             if album_obj['album_type'] == "album" and artist != self.itunes_artist:
                 album_match[album_obj['name']] = [artist, album_obj['id']]
