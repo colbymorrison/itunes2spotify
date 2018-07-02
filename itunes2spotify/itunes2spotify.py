@@ -49,23 +49,21 @@ def login(username):
 @its.command(help='Initiate transfer')
 @click.option('--non-interactive', '-r', is_flag=True,
               help='Will not ask for confirmation Spotify album is correct before adding')
-def transfer(noninteractive):
+def transfer(non_interactive):
     with open(token_path, 'r') as f:
         token = f.read()
 
     if not token:
-        logger.error("Unable to authenticate")
         print("Unable to authenticate. Please login with the 'login' command")
         return
     else:
         try:
             sp = spotipy.Spotify(auth=token)
         except SpotifyException:
-            logger.error("Soptify error")
             print("Soptify error. Please try log in again and retry")
             return
 
-    if noninteractive:
+    if non_interactive:
         tran = Transfer(sp, False)
     else:
         tran = Transfer(sp, True)
