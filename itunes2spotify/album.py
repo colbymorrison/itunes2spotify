@@ -7,6 +7,10 @@ class Album:
         self.artist = artist
         self.id = id
 
+    def __init__(self, spfy_album):
+        self.title =
+
+
     def add_to_spotify(self, sp):
         print("Adding {} by {} \n".format(self.title, self.artist))
         # sp.current_user_saved_albums_add(self.id)

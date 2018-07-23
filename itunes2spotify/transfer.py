@@ -31,8 +31,6 @@ class Transfer:
         # Set up logger
         log_form = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         logging.basicConfig(filename=logs_path, format=log_form, level=logging.DEBUG)
-        logger = logging.getLogger()
-        logger.debug("Start")
         self.logger = logging.getLogger(__name__)
 
     # Called by transfer script
@@ -42,7 +40,7 @@ class Transfer:
             try:
                 if self.album_changed():
                     try:
-                        # print("Play album in iTunes to transfer (CTRL-C to quit)")
+                        print("Play album in iTunes to transfer (CTRL-C to quit)")
                         self.get_spotify_matches()
                     except IndexError:
                         print("Couldn't find an album with this title in Spotify")
@@ -51,7 +49,7 @@ class Transfer:
                         print("Unable to authenticate Spotify account. Please log in again with the 'login' command and"
                               " retry")
                 else:
-                    time.sleep(2)
+                    time.sleep(3)
             except KeyboardInterrupt:
                 print("\nGoodbye!")
                 return 0
@@ -79,7 +77,6 @@ class Transfer:
     # Search for album in Spotify
     def get_spotify_matches(self):
         # Search for albums with matching names on Spotify
-        start = datetime.now()
         results = self.sp.search(q="album:" + self.itunes_album, limit='20', type='album')
         items = results['albums']['items']
         first_match = items[0]
@@ -87,10 +84,9 @@ class Transfer:
         artist_name = first_match['artists'][0]['name'].strip()
         album_name = first_match['name'].strip()
 
-        logging.debug("TIMING: dsearch {}".format((start - datetime.now()) / timedelta(milliseconds=1)))
         # If first album is a direct match (happens often), confirm and add
         if artist_name == self.itunes_artist and album_name == self.itunes_album:
-            if self.confirm_and_add(album_name, first_match['id']):
+            if self.confirm_add_single(Album(album_name, artist_name, first_match['id'])):
                 return
         else:
             # If not, search through artist's albums and albums with matching name
@@ -110,20 +106,20 @@ class Transfer:
             album_name = album_obj['name']
             # If direct match is found, confirm and add
             if album_name == self.itunes_album:
-                self.confirm_and_add(Album(album_name, self.itunes_artist, album_obj['id']))
+                self.confirm_add_single(Album(album_name, self.itunes_artist, album_obj['id']))
                 return
             elif self.itunes_album in album_name:
                 self.possible_matches.append(Album(album_name, self.itunes_artist, album_obj['id']))
 
-        self.get_spotify_album()
+        self.confirm_add_menu()
 
-    def get_spotify_album(self):
+    def confirm_add_menu(self):
         length = len(self.possible_matches)
         if length == 0:
             print("Spotify has no albums containing the name \"{}\" by \"{}\"".format(self.itunes_album,
                                                                                       self.itunes_artist))
         elif length == 1:
-            self.confirm_and_add(self.possible_matches[0])
+            self.confirm_add_single(self.possible_matches[0])
         else:
             menu = Menu()
             menu.set_title("Found the following matching albums. Select an album to add to Spotify or None to exit")
@@ -136,12 +132,8 @@ class Transfer:
             menu.set_refresh(menu.close)
             menu.open()
 
-    # Useful for testing
-    def get_album_artist(self):
-        return [self.itunes_album, self.itunes_artist]
-
     # Ask before adding if no-interactive flag is not set
-    def confirm_and_add(self, album):
+    def confirm_add_single(self, album):
         print("Found {} by {}".format(album.title, album.artist))
         if not self.flag:
             album.add_to_spotify(self.sp)
@@ -155,5 +147,9 @@ class Transfer:
                     return False
                 else:
                     ans = input("Please enter y or n")
+
+    # Useful for testing
+    def get_album_artist(self):
+        return [self.itunes_album, self.itunes_artist]
 
 
