@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 import logging
+from album import Album
 from datetime import datetime
 from datetime import timedelta
 from menu import Menu
@@ -24,7 +25,8 @@ class Transfer:
         # Connection to iTunes
         self.itunes_album = ""
         self.itunes_artist = ""
-        self.possible_matches = {}
+        # List of Album objects
+        self.possible_matches = []
 
         # Set up logger
         log_form = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -93,9 +95,9 @@ class Transfer:
         else:
             # If not, search through artist's albums and albums with matching name
             for album_obj in items:
-                artist = album_obj['artists'][0]['name']
                 if album_obj['album_type'] != 'single':
-                    self.possible_matches[album_obj['name']] = [artist, album_obj['id']]
+                    self.possible_matches.append(Album
+                                                 (album_obj['name'], album_obj['artists'][0]['name'], album_obj['id']))
             self.deep_search()
 
     # Search through an artist's albums on spotify until one matches iTunes album name
@@ -108,10 +110,10 @@ class Transfer:
             album_name = album_obj['name']
             # If direct match is found, confirm and add
             if album_name == self.itunes_album:
-                self.confirm_and_add(album_name, album_obj['id'])
+                self.confirm_and_add(Album(album_name, self.itunes_artist, album_obj['id']))
                 return
             elif self.itunes_album in album_name:
-                self.possible_matches[album_name] = [self.itunes_artist, album_obj['id']]
+                self.possible_matches.append(Album(album_name, self.itunes_artist, album_obj['id']))
 
         self.get_spotify_album()
 
@@ -121,18 +123,14 @@ class Transfer:
             print("Spotify has no albums containing the name \"{}\" by \"{}\"".format(self.itunes_album,
                                                                                       self.itunes_artist))
         elif length == 1:
-            album_name = list(self.possible_matches.keys())[0]
-            self.confirm_and_add(album_name, self.possible_matches[album_name])
+            self.confirm_and_add(self.possible_matches[0])
         else:
             menu = Menu()
             menu.set_title("Found the following matching albums. Select an album to add to Spotify or None to exit")
             options = []
-            for item in self.possible_matches.items():
-                album_name = item[0]
-                artist_name = item[1][0]
-                album_id = item[1][1]
-                options.append(("{} by {}".format(album_name, artist_name),
-                                lambda: self.add_spotify_album(album_name, album_id)))
+            for album in self.possible_matches:
+                options.append(("{} by {}".format(album.title, album.artist),
+                                lambda: album.add_to_spotify(self.sp)))
             options.append(("None", menu.close))
             menu.set_options(options)
             menu.set_refresh(menu.close)
@@ -143,22 +141,19 @@ class Transfer:
         return [self.itunes_album, self.itunes_artist]
 
     # Ask before adding if no-interactive flag is not set
-    def confirm_and_add(self, album_name, alb_id):
-        print("Found {} by {}".format(album_name, self.itunes_artist))
+    def confirm_and_add(self, album):
+        print("Found {} by {}".format(album.title, album.artist))
         if not self.flag:
-            self.add_spotify_album(album_name, alb_id)
+            album.add_to_spotify(self.sp)
         else:
             ans = input("Correct? (y/n): ")
             while True:
                 if ans == 'y':
-                    self.add_spotify_album(album_name, alb_id)
+                    album.add_to_spotify(self.sp)
                     return True
                 elif ans == 'n':
                     return False
                 else:
                     ans = input("Please enter y or n")
 
-    # Add album to Spotify
-    def add_spotify_album(self, album_name, album_id):
-        print("Adding {} by {} \n".format(album_name, self.itunes_artist))
-        # self.sp.current_user_saved_albums_add([album_id])
+
