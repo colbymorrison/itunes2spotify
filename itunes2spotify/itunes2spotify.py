@@ -32,14 +32,16 @@ def login(username):
         client_id = f.readline().rstrip()
         client_secret = f.readline().rstrip()
 
+    print("If prompted to paste a URL, paste the localhost URL you are redirected to. This URL will not connect to"
+          " anywhere in a browser, this is intended.\n")
+
     token = util.prompt_for_user_token(username, scope=scope, client_id=client_id,
                                        client_secret=client_secret,
                                        redirect_uri='http://localhost/')
     if token:
         with open(token_path, 'w') as f:
             f.write(token)
-        success = "Successfully logged in {}".format(username)
-        print(success)
+        print("Successfully logged in {}".format(username))
     else:
         logger.error("Login error")
         print("Login error, Please try again")
@@ -47,28 +49,23 @@ def login(username):
 
 # Start transfer
 @its.command(help='Initiate transfer')
-@click.option('--non-interactive', '-r', is_flag=True,
+@click.option('--non-interactive', '-n', is_flag=True,
               help='Will not ask for confirmation Spotify album is correct before adding')
 def transfer(non_interactive):
     with open(token_path, 'r') as f:
         token = f.read()
 
-    if not token:
-        print("Unable to authenticate. Please login with the 'login' command")
-        return
-    else:
-        try:
-            sp = spotipy.Spotify(auth=token)
-        except SpotifyException:
-            print("Soptify error. Please try log in again and retry")
-            return
+    try:
+        sp = spotipy.Spotify(auth=token)
+    except SpotifyException:
+        print("Unable to authenticate Spotify account. Please log in again with the 'login' command and retry")
+        return 1
 
     if non_interactive:
         tran = Transfer(sp, False)
     else:
         tran = Transfer(sp, True)
 
-    logger.debug("Starting transfer")
     tran.start()
 
 
