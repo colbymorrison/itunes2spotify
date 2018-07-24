@@ -3,8 +3,8 @@ import os
 import subprocess
 import time
 import logging
-from album import Album
-from menu import Menu
+from itunes2spotify.album import Album
+from itunes2spotify.menu import Menu
 from pathlib import Path
 
 # Transfer iTunes album that is playing to Spotify library

@@ -1,8 +1,7 @@
 import spotipy
 import click
 import os
-#from itunes2spotify.transfer import Transfer
-from transfer import Transfer
+from itunes2spotify.transfer import Transfer
 from spotipy import util
 from spotipy.client import SpotifyException
 from pathlib import Path

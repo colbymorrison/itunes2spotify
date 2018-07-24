@@ -1,4 +1,4 @@
-# Our representation of an album, Spotify's contains far more details unnescciscary to us
+# Our representation of an album, Spotify's contains far more details unnecessary to us
 
 
 class Album:
