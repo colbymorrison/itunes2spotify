@@ -112,17 +112,14 @@ class Transfer:
         elif length == 1:
             self.confirm_add_single(self.possible_matches[0])
         else:
-            menu = Menu()
+            menu = Menu(self.sp)
             menu.set_title("Found the following matching albums. Select an album to add to Spotify or None to exit")
             options = []
             for album in self.possible_matches:
                 # TODO: WHY IS IT ADDING THE WRONG ALBUM??
-                options.append(("{}".format(album.album_by_artist()),
-                                lambda: album.add_to_spotify(self.sp)))
-            options.append(("None", menu.close))
+                options.append(album)
             menu.set_options(options)
-            menu.set_refresh(menu.close)
-            menu.open()
+            menu.show()
 
     # Ask before adding if no-interactive flag is not set
     def confirm_add_single(self, album):

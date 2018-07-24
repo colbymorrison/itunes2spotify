@@ -15,5 +15,5 @@ class Album:
         return "{} by {}".format(self.title, self.artist)
 
     def add_to_spotify(self, sp):
-        print("Adding {} by {} \n".format(self.title, self.artist))
+        print("\nAdding {} by {} \n".format(self.title, self.artist))
         sp.current_user_saved_albums_add([self.id])
