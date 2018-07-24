@@ -32,8 +32,7 @@ def login(username):
         client_id = f.readline().rstrip()
         client_secret = f.readline().rstrip()
 
-    print("If prompted to paste a URL, paste the localhost URL you are redirected to. This URL will not connect to"
-          " anywhere in a browser, this is intended.\n")
+    print("If prompted to paste a URL, paste the localhost URL you are redirected to.\n")
 
     token = util.prompt_for_user_token(username, scope=scope, client_id=client_id,
                                        client_secret=client_secret,
@@ -43,7 +42,6 @@ def login(username):
             f.write(token)
         print("Successfully logged in {}".format(username))
     else:
-        logger.error("Login error")
         print("Login error, Please try again")
 
 
@@ -74,7 +72,6 @@ def main():
     log_form = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename=logs_path, format=log_form, level=logging.DEBUG)
     logger = logging.getLogger()
-    logger.debug("Start")
     its()
 
 

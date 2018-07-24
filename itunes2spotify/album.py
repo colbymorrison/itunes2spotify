@@ -11,6 +11,9 @@ class Album:
     def from_spfy_album(cls, spfy_album):
         return cls(spfy_album['name'], spfy_album['artists'][0]['name'], spfy_album['id'])
 
+    def album_by_artist(self):
+        return "{} by {}".format(self.title, self.artist)
+
     def add_to_spotify(self, sp):
         print("Adding {} by {} \n".format(self.title, self.artist))
-        # sp.current_user_saved_albums_add(self.id)
+        sp.current_user_saved_albums_add([self.id])

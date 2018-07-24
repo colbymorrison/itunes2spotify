@@ -63,7 +63,6 @@ class Transfer:
         album_artist = self.get_itunes_album()
 
         if album_artist != ['', ''] and album_artist != self.get_album_artist():
-            self.logger.debug("ALBUM ARTIST CHANGED: from {} to {} ".format(self.get_album_artist(), album_artist))
             self.itunes_album = album_artist[0].strip().lower()
             self.itunes_artist = album_artist[1].strip().lower()
             return True
@@ -109,8 +108,7 @@ class Transfer:
     def confirm_add_menu(self):
         length = len(self.possible_matches)
         if length == 0:
-            print("Spotify has no albums containing the name \"{}\" by \"{}\"".format(self.itunes_album,
-                                                                                      self.itunes_artist))
+            print("Sorry, couldn't find a matching album on Spotify\n")
         elif length == 1:
             self.confirm_add_single(self.possible_matches[0])
         else:
@@ -119,7 +117,7 @@ class Transfer:
             options = []
             for album in self.possible_matches:
                 # TODO: WHY IS IT ADDING THE WRONG ALBUM??
-                options.append(("{} by {}".format(album.title, album.artist),
+                options.append(("{}".format(album.album_by_artist()),
                                 lambda: album.add_to_spotify(self.sp)))
             options.append(("None", menu.close))
             menu.set_options(options)
@@ -131,13 +129,14 @@ class Transfer:
         if not self.flag:
             album.add_to_spotify(self.sp)
         else:
-            print("Found {} by {}".format(album.title, album.artist))
+            print("Found {}".format(album.album_by_artist()))
             ans = input("Correct? (y/n): ")
             while True:
                 if ans == 'y':
                     album.add_to_spotify(self.sp)
                     return True
                 elif ans == 'n':
+                    self.logger.debug("WRONG: {}".format(album.album_by_artist()))
                     return False
                 else:
                     ans = input("Please enter y or n")
